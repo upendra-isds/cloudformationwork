@@ -1,0 +1,52 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Mapping AMI and ENV
+
+Parameters:
+  MyKeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Select the KeyPair
+    AllowedValues:
+      - cfn-key-1
+      - cfn-key-2
+
+  MyEnvironmentName:
+    Type: String
+    Description: Select the Environment
+    Default: dev
+    AllowedValues:
+      - dev
+      - prod
+
+Mappings:
+  MyRegionMap:
+    us-east-2:
+      amiid: ami-0cd3dfa4e37921605
+    us-west-1:
+      amiid: ami-0ec6517f6edbf8044
+
+  MyEnvironmentMap:
+    dev:
+      InstanceType: t2.small
+    prod:
+      InstanceType: t2.micro
+
+
+
+Resources:
+  MyEC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !FindInMap
+        - MyRegionMap
+        - !Ref 'AWS::Region'
+        - amiid
+      InstanceType: !FindInMap
+        - MyEnvironmentMap
+        - !Ref MyEnvironmentName
+        - InstanceType
+      KeyName: !Ref MyKeyName
+
+  MyProdEIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      InstanceId: !Ref MyEC2Instance
